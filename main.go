@@ -7,7 +7,7 @@ import (
 	// "gen"
 	// "github.com/labstack/echo"
 
-	// "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
@@ -59,7 +59,7 @@ func gormConnect() (database *gorm.DB) {
 	USER := "akidon" // データベース
 	PASS := "12345!"
 	PROTOCOL := "tcp(localhost:3306)" // db:3306 <<< docker-compose.ymlで定義したMySQLのサービス名:ポート
-	DBNAME := "go"
+	DBNAME := "golang"
 
 	CONNECT := USER + ":" + PASS + "@" + PROTOCOL + "/" + DBNAME //+ "?charset=utf8&parseTime=true&loc=Asia%2FTokyo"
 	db, err := gorm.Open(DBMS, CONNECT)
