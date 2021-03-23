@@ -7,36 +7,38 @@ import (
 	// "gen"
 	// "github.com/labstack/echo"
 
-	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/go-sql-driver/mysql"
+	"os"
+	"github.com/joho/godotenv"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-// type apiHandler struct {
-// }
+type apiHandler struct {
+}
 
-// type User struct {
-// 	MyAssociation      string
-// 	PartnerAssociation string
-// 	Quadkey            string
-// 	Status             int
-// }
+type User struct {
+	MyAssociation      string
+	PartnerAssociation string
+	Quadkey            string
+	Status             int
+}
 
-// func (u User) String() string {
-// 	return fmt.Sprintf("%s(%d)[%s]", u.MyAssociation, u.PartnerAssociation, u.Quadkey)
-// }
+func (u User) String() string {
+	return fmt.Sprintf("%s(%d)[%s]", u.MyAssociation, u.PartnerAssociation, u.Quadkey)
+}
 
 
 func main() {
 	// DBに接続
 	db := gormConnect()
-	// // main関数が終わる際にDBの接続を切る
+	// main関数が終わる際にDBの接続を切る
 	defer db.Close()
-	// // テーブル名の複数形化を無効化します。trueにすると`User`のテーブル名は`user`になります
-	// db.SingularTable(true)
+	// テーブル名の複数形化を無効化します。trueにすると`User`のテーブル名は`user`になります
+	db.SingularTable(true)
 
-	// // db.NewRecord(User{Name:"AA", Age:10})
-	// // db.NewRecord(User{Name:"BB", Age:20})
+	// db.NewRecord(User{Name:"AA", Age:10})
+	// db.NewRecord(User{Name:"BB", Age:20})
 	// // 構造体のインスタンス化
 	// user := User{}
 	// // 挿入したい情報を構造体に与える
@@ -55,11 +57,18 @@ func main() {
 
 // SQLConnect DB接続
 func gormConnect() (database *gorm.DB) {
+	err := godotenv.Load(fmt.Sprintf("../%s.env", os.Getenv("GO_ENV")))
+    if err != nil {
+			panic(err.Error())
+        // .env読めなかった場合の処理
+    }
 	DBMS := "mysql"
-	USER := "akidon" // データベース
-	PASS := "12345!"
 	PROTOCOL := "tcp(localhost:3306)" // db:3306 <<< docker-compose.ymlで定義したMySQLのサービス名:ポート
-	DBNAME := "golang"
+	USER := os.Getenv("DB_ROLE")       // データベース
+	PASS := os.Getenv("DB_PASSWORD")
+	DBNAME := os.Getenv("DB_NAME")
+	fmt.Println(DBNAME)
+	fmt.Println("成功")
 
 	CONNECT := USER + ":" + PASS + "@" + PROTOCOL + "/" + DBNAME //+ "?charset=utf8&parseTime=true&loc=Asia%2FTokyo"
 	db, err := gorm.Open(DBMS, CONNECT)
