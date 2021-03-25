@@ -29,16 +29,6 @@ type User struct {
 	status                      int `json:"status"`
 }
 
-// type User struct {
-// 	uuid                         string `gorm:"uuid"`
-// 	my_association        string `gorm:"my_association"`
-// 	partner_association string `gorm:"partner_association"`
-// 	quadkey                  string `gorm:"quadkey"`
-// 	status                      int `gorm:"status"`
-// }
-
-// var UserEX []User
-
 func main() {
 	// DBに接続
 	// db := gormConnect()
@@ -52,59 +42,17 @@ func main() {
 	// r.HandleFunc("/opening/", showOpeningIndex)
 	log.Fatal(http.ListenAndServe(":8080", r))
 
-	// UserEX = append(UserEX, User{ my_association: "matsuyama", partner_association: "akihiro", quadkey: "1234", status: 1})
-
-
-	// テーブル名の複数形化を無効化します。trueにすると`User`のテーブル名は`UserEX`になります
-	// db.SingularTable(true)
 }
 
 // Get All Books
 func getUser(w http.ResponseWriter, r *http.Request) {
-	// DBに接続
 	db := gormConnect()
-	// db.SingularTable(true)
-	// main関数が終わる際にDBの接続を切る
 	defer db.Close()
 
 	// var result User
 	UserEx := User{}
 	// UserEx.uuid = "123"
 	db.First(&UserEx)
-
-
-	// db.Row("SELECT quadkey FROM User").Scan(&UserEX)
-	// fmt.Println(UserEX)
-	// rows, err := db.Row("SELECT * FROM testlist")
-	// if err != nil {
-	// 		fmt.Println("Err2")
-	// 		panic(err.Error())
-	// }
-	//データを格納する変数を定義
-	//複数レコード
-	// UsersEx := []User{}
-	// var User User
-	//全取得
-	// db.Find(&UsersEx)
-	// db.First(&User)
-	// fmt.Println("-")
-	// fmt.Printf(UserEx[0].my_association)
-	// fmt.Println("-")
-	//表示
-	// for _, emp := range UsersEx {
-	// 	// fmt.Println("%t\n", emp.uuid)
-	// 	// fmt.Println("%t\n", true)
-	// 	fmt.Sprint(emp.uuid)
-	// 	fmt.Println("1")
-	// 	fmt.Println(emp.my_association)
-	// 	fmt.Println("2")
-	// 	fmt.Println(emp.partner_association)
-	// 	fmt.Println("3")
-	// 	fmt.Println(emp.quadkey)
-	// 	fmt.Println("4")
-	// 	fmt.Println(emp.status)
-	// }
-
 
 	w.Header().Set("Content-Type", "application/json")
   json.NewEncoder(w).Encode(UserEx)
