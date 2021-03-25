@@ -20,23 +20,24 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-// type Users struct {
-// 	uuid                         string `json:"uuid"`
-// 	my_association        string `json:"my_association"`
-// 	partner_association string `json:"partner_association"`
-// 	quadkey                  string `json:"quadkey"`
-// 	status                      int `json:"status"`
-// }
-
-type Users struct {
-	uuid                         string `gorm:"uuid"`
-	my_association        string `gorm:"my_association"`
-	partner_association string `gorm:"partner_association"`
-	quadkey                  string `gorm:"quadkey"`
-	status                      int `gorm:"status"`
+type User struct {
+	gorm.Model
+	uuid                         string `json:"uuid"`
+	my_association        string `json:"my_association"`
+	partner_association string `json:"partner_association"`
+	quadkey                  string `json:"quadkey"`
+	status                      int `json:"status"`
 }
 
-// var users []Users
+// type User struct {
+// 	uuid                         string `gorm:"uuid"`
+// 	my_association        string `gorm:"my_association"`
+// 	partner_association string `gorm:"partner_association"`
+// 	quadkey                  string `gorm:"quadkey"`
+// 	status                      int `gorm:"status"`
+// }
+
+// var UserEX []User
 
 func main() {
 	// DBに接続
@@ -51,10 +52,10 @@ func main() {
 	// r.HandleFunc("/opening/", showOpeningIndex)
 	log.Fatal(http.ListenAndServe(":8080", r))
 
-	// users = append(users, Users{ my_association: "matsuyama", partner_association: "akihiro", quadkey: "1234", status: 1})
+	// UserEX = append(UserEX, User{ my_association: "matsuyama", partner_association: "akihiro", quadkey: "1234", status: 1})
 
 
-	// テーブル名の複数形化を無効化します。trueにすると`Users`のテーブル名は`users`になります
+	// テーブル名の複数形化を無効化します。trueにすると`User`のテーブル名は`UserEX`になります
 	// db.SingularTable(true)
 }
 
@@ -66,33 +67,47 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	// main関数が終わる際にDBの接続を切る
 	defer db.Close()
 
+	// var result User
+	UserEx := User{}
+	// UserEx.uuid = "123"
+	db.First(&UserEx)
+
+
+	// db.Row("SELECT quadkey FROM User").Scan(&UserEX)
+	// fmt.Println(UserEX)
+	// rows, err := db.Row("SELECT * FROM testlist")
+	// if err != nil {
+	// 		fmt.Println("Err2")
+	// 		panic(err.Error())
+	// }
 	//データを格納する変数を定義
-	users := []Users{}
-	var user Users
+	//複数レコード
+	// UsersEx := []User{}
+	// var User User
 	//全取得
-	db.Find(&users)
-	db.First(&user)
-	fmt.Println("-")
-	fmt.Printf(user.my_association)
-	fmt.Println("-")
+	// db.Find(&UsersEx)
+	// db.First(&User)
+	// fmt.Println("-")
+	// fmt.Printf(UserEx[0].my_association)
+	// fmt.Println("-")
 	//表示
-	for _, emp := range users {
-		// fmt.Println("%t\n", emp.uuid)
-		// fmt.Println("%t\n", true)
-		fmt.Sprint(emp.uuid)
-		fmt.Println("1")
-		fmt.Println(emp.my_association)
-		fmt.Println("2")
-		fmt.Println(emp.partner_association)
-		fmt.Println("3")
-		fmt.Println(emp.quadkey)
-		fmt.Println("4")
-		fmt.Println(emp.status)
-	}
+	// for _, emp := range UsersEx {
+	// 	// fmt.Println("%t\n", emp.uuid)
+	// 	// fmt.Println("%t\n", true)
+	// 	fmt.Sprint(emp.uuid)
+	// 	fmt.Println("1")
+	// 	fmt.Println(emp.my_association)
+	// 	fmt.Println("2")
+	// 	fmt.Println(emp.partner_association)
+	// 	fmt.Println("3")
+	// 	fmt.Println(emp.quadkey)
+	// 	fmt.Println("4")
+	// 	fmt.Println(emp.status)
+	// }
 
 
 	w.Header().Set("Content-Type", "application/json")
-  json.NewEncoder(w).Encode(users)
+  json.NewEncoder(w).Encode(UserEx)
 }
 
 // SQLConnect DB接続
