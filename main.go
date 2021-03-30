@@ -3,19 +3,9 @@ package main
 
 import (
 	"fmt"
-	// "log"
 	"net/http"
 	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-
-	// jsonデータを作成
-	// "encoding/json"
-	// "gen"
-	// "github.com/labstack/echo"
-
-	// _ "github.com/go-sql-driver/mysql"
-	// Json形式で返す
-	// "github.com/gorilla/mux"
+	// "github.com/labstack/echo/middleware"
 
 	"os"
 	"github.com/joho/godotenv"
@@ -23,36 +13,31 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
+// type User struct {
+// 	gorm.Model
+// 	Uuid                string
+// 	My_association      string
+// 	Partner_association string
+// 	Quadkey             string
+// 	Status              int
+// }
+
 type User struct {
 	gorm.Model
-	Uuid                string
-	My_association      string
-	Partner_association string
-	Quadkey             string
-	Status              int
+	Uuid                string `json:"uuid"`
 }
+
+// func (u User) String() string {
+// 	return fmt.Sprintf("Uuid:%s \n My_association:%s \n Partner_association:%s \n Quadkey:%s \n Status:%d \n \n",
+// 		u.Uuid,
+// 		u.My_association,
+// 		u.Partner_association,
+// 		u.Quadkey,
+// 		u.Status)
+// }
 
 func (u User) String() string {
-	return fmt.Sprintf("Uuid:%s \n My_association:%s \n Partner_association:%s \n Quadkey:%s \n Status:%d \n \n",
-		u.Uuid,
-		u.My_association,
-		u.Partner_association,
-		u.Quadkey,
-		u.Status)
-}
-
-func findAll(db *gorm.DB) []User {
-	var allUsers []User
-	db.Find(&allUsers)
-	return allUsers
-}
-
-
-
-func findByID(db *gorm.DB, id int) User {
-	var user User
-	db.First(&user, id)
-	return user
+	return fmt.Sprintf("Uuid:%s \n",u.Uuid)
 }
 
 func insert(users []User, db *gorm.DB) {
@@ -64,42 +49,19 @@ func insert(users []User, db *gorm.DB) {
 
 
 func main() {
-	// DBに接続
-	// db := gormConnect()
-	// // main関数が終わる際にDBの接続を切る
-	// defer db.Close()
-	// fmt.Println(findAll(db))
-
-  // user1 := User{
-	// 					Uuid: "12",
-	// 					My_association: "test1",
-	// 					Partner_association: "test1",
-	// 					Quadkey: "1234",
-	// 					Status: 1,}
-  // insertUsers := []User{user1}
-  // insert(insertUsers, db)
 	e := echo.New()
-	e.Use(middleware.Logger())
-  e.Use(middleware.Recover())
-	// e.GET("/", func(c echo.Context) error {
-	// 	return c.String(http.StatusOK, "Hello, World!")})
-	// e.GET("/user/all",getUsers)
+	// e.Use(middleware.Logger())
+  // e.Use(middleware.Recover())
+	// e.Use(middleware.BodyDump(bodyDumpHandler))
 	e.POST("/user",baseAPI_POSTUser())
-	e.GET("/user",baseAPI_GETUser)
+	e.POST("/hello", HandleHelloPost)
+	e.POST("/api/hello", HandleAPIHelloPost)
+
 
 
 	// e.Logger.Fatal(e.Start(":1323"))
-	fmt.Println("サーバー始動")
 	e.Start(":8080")
 
-	// r := mux.NewRouter()
-	// // localhost:8080一覧を取得
-	// r.HandleFunc("/v1/user/all", getUsers).Methods("GET")
-	// r.HandleFunc("/v1/user/{id}", getUser).Methods("GET")
-	// r.HandleFunc("/v1/user", postUser).Methods("POST")
-	// // r.HandleFunc("/opening/", showOpeningIndex)
-	// log.Fatal(http.ListenAndServe(":8080", r))
-	// db.Set("gorm:table_options", "ENGINE = InnoDB").AutoMigrate(&User{})
 }
 func MainPage() echo.HandlerFunc {
 	return func(c echo.Context) error {     //c をいじって Request, Responseを色々する
@@ -107,25 +69,62 @@ func MainPage() echo.HandlerFunc {
 	}
 }
 
+func bodyDumpHandler(c echo.Context, reqBody, resBody []byte) {
+  fmt.Printf("Request Body: %v\n", string(reqBody))
+  fmt.Printf("Response Body: %v\n", string(resBody))
+}
+
+func HandleHelloPost(c echo.Context) error {
+	greetingto := c.FormValue("greetingto")
+	return c.Render(http.StatusOK, "hello", greetingto)
+}
+// HelloParam は /api/hello が受けとるJSONパラメータを定義します。
+type HelloParam struct {
+	GreetingTo string `json:"greetingto"`
+}
+
+// HandleAPIHelloPost は /api/hello のPost時のJSONデータ生成処理を行います。
+func HandleAPIHelloPost(c echo.Context) error {
+	param := new(HelloParam)
+
+	if err := c.Bind(param); err != nil {
+			return err
+	}
+	fmt.Println(param)
+	return c.JSON(http.StatusOK, map[string]interface{}{"hello": param.GreetingTo})
+}
+
 func baseAPI_POSTUser() echo.HandlerFunc{
 	return func(c echo.Context) error {
+
 		var jsonMap map[string]interface{} = make(map[string]interface{})
 		var errors = make([]map[string]interface{}, 0)
 		var httpStatus = 200
+
 		db := gormConnect()
 		defer db.Close()
-
+		// fmt.Print(c.FormValue("Uuid"))
+		// fmt.Print("aa")
 		uuid := c.FormValue("Uuid")
-		myAssoci := c.FormValue("My_association")
-		parAssoci := c.FormValue("Partner_association")
-		quadkey := c.FormValue("Quadkey")
+		// gree := c.FormValue("uuid")
+		gree := new(User)
+		if err := c.Bind(gree); err != nil {
+			return err
+		}
 
-		user1 := User{
-							Uuid: uuid,
-							My_association: myAssoci,
-							Partner_association: parAssoci,
-							Quadkey: quadkey,
-							Status: 1,}
+		fmt.Println(uuid)
+		fmt.Println(gree.Uuid)
+		// myAssoci := c.FormValue("My_association")
+		// parAssoci := c.FormValue("Partner_association")
+		// quadkey := c.FormValue("Quadkey")
+		user1 := User{Uuid: uuid}
+
+		// user1 := User{
+		// 					Uuid: uuid,
+		// 					My_association: myAssoci,
+		// 					Partner_association: parAssoci,
+		// 					Quadkey: quadkey,
+		// 					Status: 1,}
 
 		if uuid == ""{
 			errors = append(errors, map[string]interface{}{
@@ -151,94 +150,6 @@ func baseAPI_POSTUser() echo.HandlerFunc{
 	}
 }
 
-func baseAPI_GETUser(c echo.Context) error {
-	db := gormConnect()
-	defer db.Close()
-	var alUsers []User
-	db.Find(&alUsers)
-	fmt.Println(alUsers)
-	allUsers := &alUsers
-	if err := c.Bind(allUsers); err != nil {
-			return err
-		}
-	return c.JSON(http.StatusOK, allUsers)
-}
-
-// func getUsers(c echo.Context) error {
-// 		db := gormConnect()
-// 		defer db.Close()
-// 		var allUsers []*User
-// 		db.Find(&allUsers)
-// 		// allUsers := &alUsers
-// 		// allUsers := json.NewEncoder(w).Encode(allUsers)
-
-// 		// allUsers := &User{
-// 		// 						Uuid: "12",
-// 		// 						My_association: "test1",
-// 		// 						Partner_association: "test1",
-// 		// 						Quadkey: "1234",
-// 		// 						Status: 1,
-// 		// }
-// 		if err := c.Bind(allUsers); err != nil {
-// 				return err
-// 			}
-// 		return c.JSON(http.StatusOK, allUsers)
-// }
-
-// Get All User
-// func getUsers(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "application/json")
-
-// 	db := gormConnect()
-// 	defer db.Close()
-// 	var allUsers []User
-// 	db.Find(&allUsers)
-
-// 	json.NewEncoder(w).Encode(allUsers)
-// }
-// // Get Single Book
-// func getUser(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "application/json")
-// 	db := gormConnect()
-// 	defer db.Close()
-
-// 	params := mux.Vars(r)
-
-// 	var user User
-// 	db.Find(&user, params["id"])
-
-// 	json.NewEncoder(w).Encode(user)
-// }
-
-// // post Single Book
-// func postUser(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "application/json")
-// 	db := gormConnect()
-// 	defer db.Close()
-
-// 	var user User
-// 	_ = json.NewDecoder(r.Body).Decode(&user)
-// 	// user1 := User{
-// 	// 				Uuid: "12",
-// 	// 				My_association: "test1",
-// 	// 				Partner_association: "test1",
-// 	// 				Quadkey: "1234",
-// 	// 				Status: 1,}
-// 	// insertUsers := []User{user1}
-// 	// insert(insertUsers, db)
-
-
-// 	json.NewEncoder(w).Encode(user)
-
-
-
-// 	// book.ID = strconv.Itoa(rand.Intn(10000)) // Mock ID - not safe in production
-// 	// books = append(books, book)
-// 	// json.NewEncoder(w).Encode(book)
-// }
-
-
-
 // SQLConnect DB接続
 func gormConnect() (database *gorm.DB) {
 	err := godotenv.Load(fmt.Sprintf("../%s.env", os.Getenv("GO_ENV")))
@@ -263,3 +174,17 @@ func gormConnect() (database *gorm.DB) {
 	}
 	return db
 }
+
+// func findAll(db *gorm.DB) []User {
+// 	var allUsers []User
+// 	db.Find(&allUsers)
+// 	return allUsers
+// }
+
+
+
+// func findByID(db *gorm.DB, id int) User {
+// 	var user User
+// 	db.First(&user, id)
+// 	return user
+// }
