@@ -13,31 +13,42 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-// type User struct {
-// 	gorm.Model
-// 	Uuid                string
-// 	My_association      string
-// 	Partner_association string
-// 	Quadkey             string
-// 	Status              int
-// }
-
 type User struct {
 	gorm.Model
 	Uuid                string `json:"uuid"`
+	My_association      string `json:"myAssociation"`
+	Partner_association string `json:"partnerAssociation"`
+	Quadkey             string `json:"quadkey"`
+	Status              int    `json:"status"`
 }
 
-// func (u User) String() string {
-// 	return fmt.Sprintf("Uuid:%s \n My_association:%s \n Partner_association:%s \n Quadkey:%s \n Status:%d \n \n",
-// 		u.Uuid,
-// 		u.My_association,
-// 		u.Partner_association,
-// 		u.Quadkey,
-// 		u.Status)
-// }
 
 func (u User) String() string {
-	return fmt.Sprintf("Uuid:%s \n",u.Uuid)
+	return fmt.Sprintf("Uuid:%s \n My_association:%s \n Partner_association:%s \n Quadkey:%s \n Status:%d \n \n",
+		u.Uuid,
+		u.My_association,
+		u.Partner_association,
+		u.Quadkey,
+		u.Status)
+}
+
+
+func main() {
+	e := echo.New()
+	// e.Use(middleware.Logger())
+  // e.Use(middleware.Recover())
+	// e.Use(middleware.BodyDump(bodyDumpHandler))
+	e.POST("/user",baseAPI_user())
+	// e.POST("/affinity",baseAPI_affinity())
+
+	// e.Logger.Fatal(e.Start(":1323"))
+	e.Start(":8080")
+}
+
+func MainPage() echo.HandlerFunc {
+	return func(c echo.Context) error {     //c をいじって Request, Responseを色々する
+			return c.String(http.StatusOK, "Hello World")
+	}
 }
 
 func insert(users []User, db *gorm.DB) {
@@ -47,108 +58,112 @@ func insert(users []User, db *gorm.DB) {
 	}
 }
 
-
-func main() {
-	e := echo.New()
-	// e.Use(middleware.Logger())
-  // e.Use(middleware.Recover())
-	// e.Use(middleware.BodyDump(bodyDumpHandler))
-	e.POST("/user",baseAPI_POSTUser())
-	e.POST("/hello", HandleHelloPost)
-	e.POST("/api/hello", HandleAPIHelloPost)
-
-
-
-	// e.Logger.Fatal(e.Start(":1323"))
-	e.Start(":8080")
-
-}
-func MainPage() echo.HandlerFunc {
-	return func(c echo.Context) error {     //c をいじって Request, Responseを色々する
-			return c.String(http.StatusOK, "Hello World")
-	}
+func updateWhereID(users User, db *gorm.DB) {
+	var user User
+	db.Model(&user).Where("uuid = ?", users.Uuid).Update("my_association", users.My_association)
+	db.Model(&user).Where("uuid = ?", users.Uuid).Update("partner_association",users.Partner_association)
+	db.Model(&user).Where("uuid = ?", users.Uuid).Update("quadkey",users.Quadkey)
+	db.Model(&user).Where("uuid = ?", users.Uuid).Update("status",users.Status)
 }
 
-func bodyDumpHandler(c echo.Context, reqBody, resBody []byte) {
-  fmt.Printf("Request Body: %v\n", string(reqBody))
-  fmt.Printf("Response Body: %v\n", string(resBody))
-}
-
-func HandleHelloPost(c echo.Context) error {
-	greetingto := c.FormValue("greetingto")
-	return c.Render(http.StatusOK, "hello", greetingto)
-}
-// HelloParam は /api/hello が受けとるJSONパラメータを定義します。
-type HelloParam struct {
-	GreetingTo string `json:"greetingto"`
-}
-
-// HandleAPIHelloPost は /api/hello のPost時のJSONデータ生成処理を行います。
-func HandleAPIHelloPost(c echo.Context) error {
-	param := new(HelloParam)
-
-	if err := c.Bind(param); err != nil {
-			return err
-	}
-	fmt.Println(param)
-	return c.JSON(http.StatusOK, map[string]interface{}{"hello": param.GreetingTo})
-}
-
-func baseAPI_POSTUser() echo.HandlerFunc{
+func baseAPI_user() echo.HandlerFunc{
 	return func(c echo.Context) error {
+		db := gormConnect()
+		defer db.Close()
 
 		var jsonMap map[string]interface{} = make(map[string]interface{})
 		var errors = make([]map[string]interface{}, 0)
 		var httpStatus = 200
 
-		db := gormConnect()
-		defer db.Close()
-		// fmt.Print(c.FormValue("Uuid"))
-		// fmt.Print("aa")
-		uuid := c.FormValue("Uuid")
 		// gree := c.FormValue("uuid")
-		gree := new(User)
-		if err := c.Bind(gree); err != nil {
+		user := new(User)
+		if err := c.Bind(user); err != nil {
 			return err
 		}
 
-		fmt.Println(uuid)
-		fmt.Println(gree.Uuid)
-		// myAssoci := c.FormValue("My_association")
-		// parAssoci := c.FormValue("Partner_association")
-		// quadkey := c.FormValue("Quadkey")
-		user1 := User{Uuid: uuid}
+		fmt.Println(user)
 
-		// user1 := User{
-		// 					Uuid: uuid,
-		// 					My_association: myAssoci,
-		// 					Partner_association: parAssoci,
-		// 					Quadkey: quadkey,
-		// 					Status: 1,}
 
-		if uuid == ""{
-			errors = append(errors, map[string]interface{}{
-				"status":  400,
-				"param":   "username",
-				"message": "invalid",
-			})
-			jsonMap["errors"] = errors
-			httpStatus = 400
-		}else{
+		user1 := User{
+							Uuid: user.Uuid,
+							My_association: user.My_association,
+							Partner_association: user.Partner_association,
+							Quadkey: user.Quadkey,
+							Status: user.Status,}
+
+		if user.Uuid == ""{
 			insertUsers := []User{user1}
 			insert(insertUsers, db)
 			errors = append(errors, map[string]interface{}{
 				"status":  200,
 				"param":   "OK",
-				"message": "OK",
+				"message": "追加しました",
 			})
-			jsonMap["errors"] = errors
+			jsonMap["sucsess"] = errors
+			httpStatus = 200
+		}else{
+			// insertUsers := []User{user1}
+
+			// insert(insertUsers, db)
+			updateWhereID(user1, db)
+			errors = append(errors, map[string]interface{}{
+				"status":  200,
+				"param":   "OK",
+				"message": "更新しました",
+			})
+			jsonMap["sucsess"] = errors
 			httpStatus = 200
 		}
 
 		return c.JSON(httpStatus, jsonMap)
 	}
 }
+
+
+
+// func baseAPI_affinity() echo.HandlerFunc{
+// 	return func(c echo.Context) error {
+// 		db := gormConnect()
+// 		defer db.Close()
+
+// 		var jsonMap map[string]interface{} = make(map[string]interface{})
+// 		var errors = make([]map[string]interface{}, 0)
+// 		var httpStatus = 200
+
+// 		user := new(Get)
+// 		if err := c.Bind(user); err != nil {
+// 			return err
+// 		}
+
+// 		fmt.Println(user)
+
+
+// 		// user1 := Get{Uuid: user.uuid,}
+
+// 		if user.uuid == ""{
+// 			errors = append(errors, map[string]interface{}{
+// 				"status":  400,
+// 				"param":   "username",
+// 				"message": "invalid",
+// 			})
+// 			jsonMap["errors"] = errors
+// 			httpStatus = 400
+// 		}else{
+// 			// insertUsers := []User{user1}
+// 			// insert(insertUsers, db)
+// 			errors = append(errors, map[string]interface{}{
+// 				"status":  200,
+// 				"param":   "OK",
+// 				"message": "OK",
+// 			})
+// 			jsonMap["sucsess"] = errors
+// 			httpStatus = 200
+// 		}
+
+// 		return c.JSON(httpStatus, jsonMap)
+// 	}
+// }
+
 
 // SQLConnect DB接続
 func gormConnect() (database *gorm.DB) {
@@ -181,10 +196,10 @@ func gormConnect() (database *gorm.DB) {
 // 	return allUsers
 // }
 
-
-
-// func findByID(db *gorm.DB, id int) User {
+// func baseAPI_affinity(db *gorm.DB, id int) User {
 // 	var user User
 // 	db.First(&user, id)
 // 	return user
 // }
+
+
