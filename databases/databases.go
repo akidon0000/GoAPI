@@ -2,10 +2,6 @@ package databases
 
 import (
 	"fmt"
-	// "net/http"
-	// "github.com/labstack/echo"
-	// "github.com/labstack/echo/middleware"
-
 	"os"
 	"github.com/joho/godotenv"
 	"github.com/jinzhu/gorm"
