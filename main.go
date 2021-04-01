@@ -11,6 +11,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+
+	"goAPI/databases"
 )
 
 type User struct {
@@ -34,6 +36,8 @@ func (u User) String() string {
 
 
 func main() {
+	databases.Intro()
+
 	e := echo.New()
 	// e.Use(middleware.Logger())
   // e.Use(middleware.Recover())
