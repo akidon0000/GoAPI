@@ -39,7 +39,7 @@ func main() {
   // e.Use(middleware.Recover())
 	// e.Use(middleware.BodyDump(bodyDumpHandler))
 	e.POST("/user",baseAPI_user())
-	// e.POST("/affinity",baseAPI_affinity())
+	e.POST("/affinity",baseAPI_affinity())
 
 	// e.Logger.Fatal(e.Start(":1323"))
 	e.Start(":8080")
@@ -64,6 +64,12 @@ func updateWhereID(users User, db *gorm.DB) {
 	db.Model(&user).Where("uuid = ?", users.Uuid).Update("partner_association",users.Partner_association)
 	db.Model(&user).Where("uuid = ?", users.Uuid).Update("quadkey",users.Quadkey)
 	db.Model(&user).Where("uuid = ?", users.Uuid).Update("status",users.Status)
+}
+
+func search(partner string, db *gorm.DB) (User){
+	var user User
+	db.Raw("SELECT * FROM users WHERE my_association = ?", partner).Scan(&user)
+	return user
 }
 
 func baseAPI_user() echo.HandlerFunc{
@@ -121,48 +127,49 @@ func baseAPI_user() echo.HandlerFunc{
 
 
 
-// func baseAPI_affinity() echo.HandlerFunc{
-// 	return func(c echo.Context) error {
-// 		db := gormConnect()
-// 		defer db.Close()
+func baseAPI_affinity() echo.HandlerFunc{
+	return func(c echo.Context) error {
+		db := gormConnect()
+		defer db.Close()
 
-// 		var jsonMap map[string]interface{} = make(map[string]interface{})
-// 		var errors = make([]map[string]interface{}, 0)
-// 		var httpStatus = 200
+		// var jsonMap map[string]interface{} = make(map[string]interface{})
+		// var errors = make([]map[string]interface{}, 0)
+		var httpStatus = 200
 
-// 		user := new(Get)
-// 		if err := c.Bind(user); err != nil {
-// 			return err
-// 		}
+		user := new(User)
+		if err := c.Bind(user); err != nil {
+			return err
+		}
 
-// 		fmt.Println(user)
+		fmt.Println(user)
 
+		// var newuser User
 
-// 		// user1 := Get{Uuid: user.uuid,}
+		var newuser = search(user.Partner_association, db)
 
-// 		if user.uuid == ""{
-// 			errors = append(errors, map[string]interface{}{
-// 				"status":  400,
-// 				"param":   "username",
-// 				"message": "invalid",
-// 			})
-// 			jsonMap["errors"] = errors
-// 			httpStatus = 400
-// 		}else{
-// 			// insertUsers := []User{user1}
-// 			// insert(insertUsers, db)
-// 			errors = append(errors, map[string]interface{}{
-// 				"status":  200,
-// 				"param":   "OK",
-// 				"message": "OK",
-// 			})
-// 			jsonMap["sucsess"] = errors
-// 			httpStatus = 200
-// 		}
-
-// 		return c.JSON(httpStatus, jsonMap)
-// 	}
-// }
+		// if user.Uuid == ""{
+		// 	errors = append(errors, map[string]interface{}{
+		// 		"status":  400,
+		// 		"param":   "username",
+		// 		"message": "invalid",
+		// 	})
+		// 	jsonMap["errors"] = errors
+		// 	httpStatus = 400
+		// }else{
+		// 	// insertUsers := []User{user1}
+		// 	// insert(insertUsers, db)
+		// 	errors = append(errors, map[string]interface{}{
+		// 		"status":  200,
+		// 		"param":   "OK",
+		// 		"message": "OK",
+		// 	})
+		// 	jsonMap["sucsess"] = errors
+		// 	httpStatus = 200
+		// }
+		// return c.JSON(httpStatus, jsonMap)
+		return c.JSON(httpStatus, newuser)
+	}
+}
 
 
 // SQLConnect DB接続
