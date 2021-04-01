@@ -2,9 +2,7 @@ package routing
 
 import (
 	"fmt"
-	// "net/http"
 	"github.com/labstack/echo"
-	// "github.com/labstack/echo/middleware"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -48,10 +46,6 @@ func BaseAPI_user() echo.HandlerFunc{
 							Partner_association: user.Partner_association,
 							Quadkey: user.Quadkey,
 							Status: user.Status,}
-
-		fmt.Println(user)
-		fmt.Print("aa")
-		fmt.Println(user1)
 
 		var jsonMap map[string]interface{} = make(map[string]interface{})
 		var massages = make([]map[string]interface{}, 0)

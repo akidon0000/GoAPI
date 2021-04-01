@@ -8,11 +8,6 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-
-
-
-
-
 // SQLConnect DB接続
 func GormConnect() (database *gorm.DB) {
 	// パスワード等を.envファイルから読み取る
