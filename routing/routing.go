@@ -19,6 +19,10 @@ type User struct {
 	Status              int    `json:"status"`
 }
 
+type Result struct {
+	Status              string
+	Affinity            string
+}
 
 func (u User) String() string {
 	return fmt.Sprintf("Uuid:%s \n My_association:%s \n Partner_association:%s \n Quadkey:%s \n Status:%d \n ",
@@ -47,29 +51,26 @@ func BaseAPI_user() echo.HandlerFunc{
 							Quadkey: user.Quadkey,
 							Status: user.Status,}
 
-		var jsonMap map[string]interface{} = make(map[string]interface{})
-		var massages = make([]map[string]interface{}, 0)
-		var httpStatus = 200
-		var text_message string
 		if user.Uuid == ""{
 			insertUsers := []User{user1}
 			insert(insertUsers, db)
-			text_message = "追加しました"
 		}else{
 			update(user1, db)
-			// updateWhereID(user, db)
-			text_message = "更新しました"
 		}
 
-		massages = append(massages, map[string]interface{}{
-			"status":  200,
-			"param":   "OK",
-			"message": text_message,
-		})
-		jsonMap["sucsess"] = massages
-		httpStatus = 200
+		var newuser = search(user.Partner_association, user.My_association ,user.Quadkey, db)
 
-		return c.JSON(httpStatus, jsonMap)
+		var result Result
+		result.Status = "0"
+		if newuser.Uuid == ""{
+			// 一致する条件が見当たらなかった場合
+			result.Affinity = "0"
+		}else{
+			// 完全一致が見つかった場合
+			result.Affinity = "100"
+		}
+
+		return c.JSON(200, result)
 	}
 }
 
@@ -83,12 +84,11 @@ func BaseAPI_affinity() echo.HandlerFunc{
 		if err := c.Bind(user); err != nil {
 			return err
 		}
-		var newuser = search(user.Partner_association, db)
+		var newuser = search(user.Partner_association, user.My_association ,user.Quadkey, db)
 		var httpStatus = 200
 		return c.JSON(httpStatus, newuser)
 	}
 }
-
 
 func insert(users []User, db *gorm.DB) {
 	for _, user := range users {
@@ -102,9 +102,8 @@ func update(users User, db *gorm.DB) {
 	db.Model(&user).Where("uuid = ?", users.Uuid).Update(map[string]interface{}{"my_association": users.My_association, "partner_association": users.Partner_association, "quadkey": users.Quadkey, "status": users.Status})
 }
 
-func search(partner string, db *gorm.DB) (User){
+func search(partner string,my string,quadkey string, db *gorm.DB) (User){
 	var user User
-	db.Raw("SELECT * FROM users WHERE my_association = ?", partner).Scan(&user)
+	db.Raw("SELECT * FROM users WHERE my_association = ? AND partner_association = ? AND quadkey = ? ", partner, my ,quadkey).Scan(&user)
 	return user
 }
-
