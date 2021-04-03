@@ -60,7 +60,7 @@ func BaseAPI_user() echo.HandlerFunc{
 		}
 
 		// 相性取得
-		var count = search(user.Partner_association, user.My_association ,user.Quadkey, db)
+		var count = search(user.Partner_association, user.My_association ,user.Quadkey,user.Status , db)
 
 		var result Result
 		result.Status = "0"
@@ -86,9 +86,9 @@ func update(users User, db *gorm.DB) {
 	db.Model(&user).Where("uuid = ?", users.Uuid).Update(map[string]interface{}{"my_association": users.My_association, "partner_association": users.Partner_association, "quadkey": users.Quadkey, "status": users.Status})
 }
 
-func search(partner string,my string,quadkey string, db *gorm.DB) (int){
+func search(partner string,my string,quadkey string,status int, db *gorm.DB) (int){
 	var count int
-	db.Model(&User{}).Where("my_association = ?", "test1").Count(&count)
+	db.Model(&User{}).Where("my_association = ? AND partner_association = ? AND quadkey = ? AND status = ?",partner,my,quadkey,status).Count(&count)
 	fmt.Println("検索件数：" , count)
 	return count
 }
