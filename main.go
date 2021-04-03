@@ -13,7 +13,6 @@ func main() {
 
 	// routing
 	e.POST("/user",routing.BaseAPI_user())
-	e.POST("/affinity",routing.BaseAPI_affinity())
 
 	e.Start(":8080")
 }
