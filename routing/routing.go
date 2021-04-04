@@ -10,7 +10,6 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 
 	"goAPI/databases"
-	// "goAPI/algorithm"
 	"github.com/masatana/go-textdistance"
 
 	"github.com/google/uuid"
